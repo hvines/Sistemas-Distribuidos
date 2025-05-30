@@ -16,8 +16,9 @@ Este proyecto despliega, mediante Docker Compose, un flujo de procesamiento de e
 
     ```powershell
     
-docker-compose down --volumes  # limpia datos previos
-docker-compose up -d          # construye y arranca todos los servicios
+	docker-compose down --volumes  # limpia datos previos
+	docker-compose up -d          # construye y arranca todos los servicios
+
     ```
 
 
@@ -25,8 +26,9 @@ docker-compose up -d          # construye y arranca todos los servicios
 
     ```powershell
 
-docker-compose ps
-	```
+	docker-compose ps
+	
+ 	```
  
 4.	Acceder a las UIs:
 
