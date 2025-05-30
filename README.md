@@ -1,13 +1,13 @@
-Tarea 1
+#Tarea 1
 
-1. Descripción general
+#Descripción general
 
 Este proyecto despliega, mediante Docker Compose, un flujo de procesamiento de eventos de tráfico extraídos de la API de Waze:
-	•	Scraper: obtiene los últimos eventos de la zona de Santiago cada segundo y los almacena en MongoDB.
-	•	MongoDB: base de datos NoSQL que actúa como fuente de verdad histórica.
-	•	Cache (Redis): almacena el último lote de eventos durante 10 segundos para lecturas rápidas.
-	•	Generador de tráfico: simula llegadas de eventos con dos distribuciones (determinista y Poisson) y postea a la API interna.
-	•	UIs de administración: mongo-express en el puerto 8081 y redis-commander en el 8082.
+	-	Scraper: obtiene los últimos eventos de la zona de Santiago cada segundo y los almacena en MongoDB.
+	-	MongoDB: base de datos NoSQL que actúa como fuente de verdad histórica.
+	-	Cache (Redis): almacena el último lote de eventos durante 10 segundos para lecturas rápidas.
+	-	Generador de tráfico: simula llegadas de eventos con dos distribuciones (determinista y Poisson) y postea a la API interna.
+	-	UIs de administración: mongo-express en el puerto 8081 y redis-commander en el 8082.
 
 3. Detalle de cada componente
 	•	docker-compose.yml
