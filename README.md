@@ -33,14 +33,13 @@ Este proyecto despliega, mediante Docker Compose, un flujo de procesamiento de e
 4.	Acceder a las UIs:
 
    
-	Mongo Express → http://localhost:8081
-	Redis Commander → http://localhost:8082
+	Mongo Express → http://localhost:8081 y Redis Commander → http://localhost:8082
 
 # Explicación de parámetros de distribución
  
  ```powershell
     
-EVENTS_PER_SEC	traffic-generator	Tasa media de generación de eventos (evt/s).	5
+EVENTS_PER_SEC	traffic-generator	Tasa media de generación de eventos por segundo (evt/s).	5
 DISTRIBUTION	traffic-generator	Distribución de llegadas: deterministic o poisson.	deterministic
 
  ```
