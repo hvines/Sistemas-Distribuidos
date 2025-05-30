@@ -2,3 +2,4 @@ requests
 pymongo
 xmltodict
 redis
+flask
