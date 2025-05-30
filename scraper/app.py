@@ -2,25 +2,34 @@ import requests
 import json
 import os
 import time
-from pymongo import MongoClient
+from pymongo import MongoClient, errors, ASCENDING
+from datetime import datetime
 
-# Conexión a MongoDB
-print("🚀 Iniciando scraper...")
+
+# Inicia Scraper...
 mongo_uri = os.environ.get("MONGO_URI")
 if not mongo_uri:
-    raise ValueError("❌ La variable de entorno MONGO_URI no está definida.")
-client = MongoClient(mongo_uri)
+    raise ValueError("La variable de entorno MONGO_URI no está definida.")
 
-# Configuración de base de datos
-db_name = "waze_alertas"
-collection_name = "eventos"
-db = client[db_name]
-coleccion = db[collection_name]
+client = MongoClient(mongo_uri)
+db = client["waze_alertas"]
+coleccion = db["eventos"]
+
+
+
+# ─── 1) BORRAR AL INICIO ─────────────────────────────────────
+result = coleccion.delete_many({})
+print(f"🗑️  Documentos eliminados al inicio: {result.deleted_count}", flush=True)
+
+# ─── 2) INDICE ───────────────────────────────────────────────
+if "uuid_1" not in coleccion.index_information():
+    coleccion.create_index([("uuid", ASCENDING)], unique=True, sparse=True)
 
 # Bucle principal
 while True:
     try:
-        print("🛰️  Descargando y procesando datos...")
+        print("Descargando y procesando datos...", flush=True)
+
 
         url = (
             "https://www.waze.com/live-map/api/georss?"
@@ -29,30 +38,28 @@ while True:
             "env=row&types=alerts,traffic"
         )
 
-        response = requests.get(url)
-        if response.status_code != 200:
-            print(f"❌ Error HTTP {response.status_code}")
+        resp = requests.get(url)
+        if resp.status_code != 200:
+            print(f"Error HTTP {resp.status_code}", flush=True)
+            time.sleep(10)
             continue
 
-        data = json.loads(response.text)
+        data = resp.json()
         alerts = data.get("alerts", [])
+        print(f"Eventos descargados: {len(alerts)}", flush=True)
 
-        print(f"📦 Alertas descargadas: {len(alerts)}")
+        insertados = 0
+        for alert in alerts:
+            alert["timestamp"] = datetime.utcnow()
+            try:
+                coleccion.insert_one(alert)
+                insertados += 1
+            except errors.DuplicateKeyError:
+                pass
 
-        if alerts:
-            if collection_name in db.list_collection_names():
-                print("♻️ Limpiando colección anterior...")
-                coleccion.delete_many({})
-            else:
-                print(f"🆕 Creando colección '{collection_name}'...")
-
-            coleccion.insert_many(alerts)
-            print(f"✅ Se insertaron {len(alerts)} documentos en MongoDB.")
-        else:
-            print("⚠️ No se encontraron alertas para insertar. No se modifica la colección.")
 
     except Exception as e:
-        print(f"🔥 Error general en la iteración: {e}")
+        print(f"Error en la iteración: {e}", flush=True)
 
-    print("⏳ Esperando 10 minutos para la próxima actualización...\n")
-    time.sleep(600)
+    print("Esperando 1 segundo...\n", flush=True)
+    time.sleep(1)
