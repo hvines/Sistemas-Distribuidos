@@ -45,3 +45,4 @@ DISTRIBUTION	traffic-generator	Distribución de llegadas: deterministic o poisso
  ```
 Existe un parametro de distribución tanto determinista como poisson.
 Por defecto está en poisso, pero cambiarlo a determinista, es sólo cambiar la linea 30 del generator.py a "deterministic".
+
