@@ -4,7 +4,11 @@ import os
 import time
 from pymongo import MongoClient, errors, ASCENDING
 from datetime import datetime
+from redis import Redis
 
+
+redis_host = os.environ.get("REDIS_HOST", "redis")
+cache = Redis(host=redis_host, port=6379, db=0)
 
 # Inicia Scraper...
 mongo_uri = os.environ.get("MONGO_URI")
@@ -57,6 +61,13 @@ while True:
             except errors.DuplicateKeyError:
                 pass
 
+        # Cacheamos el último batch en Redis durante 10 segundos
+        cache.setex("latest_alerts", 10, json.dumps(alerts, default=str))
+        print("Cached latest_alerts en Redis por 10s", flush=True)
+
+        print("Esperando 10 segundos…\n", flush=True)
+        time.sleep(10)
+        
 
     except Exception as e:
         print(f"Error en la iteración: {e}", flush=True)

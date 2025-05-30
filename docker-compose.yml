@@ -1,14 +1,43 @@
-# version: '3'
+# version: '3.8'
 
 services:
+  traffic-generator:
+    build: ./traffic-generator
+    container_name: traffic_generator
+    depends_on:
+      - mongo
+    environment:
+      - GENERATOR_API_URL=http://waze_scraper:5000/ingest
+      - EVENTS_PER_SEC=10
+    networks:
+      - my-network
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - my-network
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis_commander
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8082:8081"
+    networks:
+      - my-network 
+
 
   mongo:
-    image: mongo
+    image: mongo:latest
     restart: always
     container_name: mongo
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
     volumes:
       - mongo_data:/data/db
     networks:
@@ -18,18 +47,16 @@ services:
     image: mongo-express:latest
     restart: always
     container_name: mongo-express
-    ports:
-      - 8081:8081
-    environment:
-      # - ME_CONFIG_MONGODB_SERVER=mongo
-      # - ME_CONFIG_MONGODB_PORT=27017
-      # - ME_CONFIG_MONGODB_ADMINUSERNAME=root
-      - ME_CONFIG_MONGODB_URL=mongodb://root:example@mongo:27017/?authSource=admin
-      - ME_CONFIG_MONGODB_ADMINPASSWORD=example
-      - ME_CONFIG_BASICAUTH_USERNAME=admin
-      - ME_CONFIG_BASICAUTH_PASSWORD=admin123
     depends_on:
       - mongo
+    ports:
+      - "8081:8081"
+    environment:
+      # Conexión a Mongo con authSource=admin:
+      - ME_CONFIG_MONGODB_URL=mongodb://root:example@mongo:27017/?authSource=admin
+      # Credenciales para acceder a la UI de mongo-express
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=admin123
     networks:
       - my-network
 
@@ -37,14 +64,15 @@ services:
     build:
       context: ./scraper
     container_name: waze_scraper
+    working_dir: /app
     volumes:
       - ./scraper:/app
-    working_dir: /app
     command: python app.py
     depends_on:
       - mongo
     environment:
       - MONGO_URI=mongodb://root:example@mongo:27017/
+      - REDIS_HOST=redis
     networks:
       - my-network
 
