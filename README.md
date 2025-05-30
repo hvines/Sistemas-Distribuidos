@@ -11,30 +11,36 @@ Este proyecto despliega, mediante Docker Compose, un flujo de procesamiento de e
 
 
 # Instrucciones de arranque
-1.	Clonar o descargar el repositorio.
-2.	
-3.	Ejecutar:
+1.	Clonar o descargar el repositorio.	
+2.	Ejecutar:
 
+    ```powershell
+    
 docker-compose down --volumes  # limpia datos previos
 docker-compose up -d          # construye y arranca todos los servicios
+    ```
 
 
-	4.	Verificar servicios corriendo:
+3.	Verificar servicios corriendo:
+
+    ```powershell
 
 docker-compose ps
+	```
+ 
+4.	Acceder a las UIs:
 
+   
+	Mongo Express → http://localhost:8081
+	Redis Commander → http://localhost:8082
 
-	5.	Acceder a las UIs:
-	•	Mongo Express → http://localhost:8081
-	•	Redis Commander → http://localhost:8082
-
-5. Explicación de parámetros
-
-Parámetro	Servicio	Descripción	Valor por defecto
+# Explicación de parámetros de distribución
+ 
+ ```powershell
+    
 EVENTS_PER_SEC	traffic-generator	Tasa media de generación de eventos (evt/s).	5
 DISTRIBUTION	traffic-generator	Distribución de llegadas: deterministic o poisson.	deterministic
-MONGO_URI	waze-scraper	Cadena de conexión a MongoDB con autenticación.	mongodb://root:example@mongodb:27017/?authSource=admin
-REDIS_HOST	waze-scraper	Host de Redis para cache.	redis
-TTL latest_alerts (s)	waze-scraper (Redis)	Tiempo de vida de los datos cacheados en segundos.	10
 
-Estos parámetros pueden ajustarse en el docker-compose.yml o mediante variables de entorno.
+ ```
+Existe un parametro de distribución tanto determinista como poisson.
+Por defecto está en poisso, pero cambiarlo a determinista, es sólo cambiar la linea 30 del generator.py a "deterministic".
