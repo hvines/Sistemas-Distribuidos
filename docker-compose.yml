@@ -7,6 +7,12 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
+    #healthcheck:
+      #test: >
+        #CMD-SHELL mongosh --username root --password example --authenticationDatabase admin --eval "db.adminCommand('ping')" --quiet
+      #interval: 5s
+      #timeout: 5s
+      #retries: 5
     volumes:
       - mongo_data:/data/db
     networks:
@@ -17,17 +23,21 @@ services:
   mongo-express:
     image: mongo-express:latest
     restart: always
+    #depends_on:
+      #mongodb:
+        #condition: service_healthy
     depends_on:
-     - mongodb
+      - mongodb
     environment:
       ME_CONFIG_BASICAUTH: 'false'  
-      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
-      ME_CONFIG_MONGODB_ADMINPASSWORD: admin123
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
       ME_CONFIG_MONGODB_URL: mongodb://root:example@mongodb:27017/?authSource=admin
     ports:
       - "8081:8081"
     networks:
       - my-network
+
 
   redis-commander:
     image: rediscommander/redis-commander:latest
@@ -58,32 +68,77 @@ services:
         retries: 5
 
   waze-scraper:
-      build: ./scraper
-      depends_on:
+    build:
+      context: ./scraper
+      dockerfile: Dockerfile
+    depends_on:
         - mongodb
         - redis
-      environment:
+    environment:
         MONGO_URI: "mongodb://root:example@mongodb:27017/?authSource=admin"
         REDIS_HOST: redis
-      networks:
+    networks:
         - my-network
+    ports:
+        - "5001:5000"
 
   traffic-generator:
     build:
       context: ./traffic-generator
+      dockerfile: Dockerfile
     container_name: traffic_generator
     depends_on:
-      - waze-scraper
+      waze-scraper:
+        condition: service_started
     environment:
       GENERATOR_API_URL: http://waze-scraper:5000/ingest
       EVENTS_PER_SEC: 10
-      DISTRIBUTION: poisson
+      DISTRIBUTION: deterministic
     networks:
       - my-network
+
+  pig:
+    build:
+      context: ./pig
+      dockerfile: Dockerfile
+    image: my_pig:latest
+    container_name: pig_ds
+    #depends_on:
+      #mongodb:
+        #condition: service_healthy
+    depends_on:
+      - mongodb      
+    volumes:
+      - mongo_export:/data/raw      # aquí volcaré el JSON exportado
+      - pig_output:/data/processed  # aquí se guardará el JSON procesado
+      - pig_data_raw:/data/raw
+      - pig_data_processed:/data/processed
+    entrypoint: [ "bash", "-c" ]
+    command: |
+      echo "=== Iniciando Pig Loop ==="; \
+      # Esperar a Mongo y exportar datos a /data/raw/events.json
+      until mongoexport --uri="mongodb://root:example@mongodb:27017/tu_base.tu_coleccion" \
+        --out /data/raw/events.json --type=json --pretty=false; do \
+        echo "Esperando a MongoDB para exportar..."; sleep 2; \
+      done; \
+      echo "Export completo -> /data/raw/events.json"; \
+      # Ejecutar script Pig
+      pig -x local /scripts/filter_homogenize.pig; \
+      echo "Pig terminó: resultados en /data/processed"; \
+      # Dormir 30 segundos antes de próxima iteración
+      echo "Durmiendo 30s antes de nueva iteración..."; \
+      sleep 30; \
+      exec /bin/bash -c "$0"
+
+      
 
 volumes:
   mongo_data:
   redis_data:
+  mongo_export:
+  pig_data_raw:
+  pig_data_processed:
+  pig_output:
 
 networks:
   my-network:

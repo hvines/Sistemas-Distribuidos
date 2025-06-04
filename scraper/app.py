@@ -19,8 +19,12 @@ db = client["waze_alertas"]
 coleccion = db["eventos"]
 
 
+
+# Limpiar la colección al inicio
+
 result = coleccion.delete_many({})
-print(f"🗑️  Documentos eliminados al inicio: {result.deleted_count}", flush=True)
+print(f"Documentos eliminados al inicio: {result.deleted_count}", flush=True)
+
 
 
 if "uuid_1" not in coleccion.index_information():

@@ -1,6 +1,6 @@
 import os, time, json, random
 import requests
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 API_URL = os.environ["GENERATOR_API_URL"]  
@@ -21,13 +21,13 @@ def make_random_alert():
           "lat": random.uniform(BBOX["bottom"], BBOX["top"]),
           "lon": random.uniform(BBOX["left"],  BBOX["right"]),
       },
-      "timestamp": datetime.utcnow().isoformat()
+      "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
 
 if __name__ == "__main__":
     rate = float(os.environ.get("EVENTS_PER_SEC", 5))
-    dist = os.environ.get("DISTRIBUTION", "poisson").lower() #por defecto "deterministic", cambiar por "poisson" para probar otra distribución
+    dist = os.environ.get("DISTRIBUTION", "deterministic").lower() #por defecto "deterministic", cambiar por "poisson" para probar otra distribución
     interval = 1.0 / rate
 
 print(f"Generador funcionando a: rate={rate} evt/s, con una distribución={dist}")
