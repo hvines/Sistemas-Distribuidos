@@ -1,49 +1,53 @@
 # pig/Dockerfile
-# --------------------------------------------------------
-# 1) Imagen base Ubuntu 22.04 (puedes usar otra distro si prefieres)
-# 2) Instalamos Java, wget, mongo-tools (mongoexport/mongoimport) y Pig
-# 3) Creamos carpetas /scripts, /data/raw y /data/processed
-# 4) Copiamos el script Pig
-# --------------------------------------------------------
 
-FROM ubuntu:22.04
-
+FROM ubuntu:20.04
 ENV DEBIAN_FRONTEND=noninteractive
-ENV PIG_HOME=/usr/local/pig
-ENV PATH=$PIG_HOME/bin:$PATH
 
-# 1) Instalar Java 11 (headless), wget, gnupg y mongo-tools
+# 1. Instalar Java (para Pig), Python y utilidades
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-      openjdk-11-jdk-headless \
-      wget \
-      gnupg \
-      curl && \
-    # Instalar MongoDB Database Tools para tener mongoexport y mongoimport
-    wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | apt-key add - && \
-    echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" \
-      | tee /etc/apt/sources.list.d/mongodb-org-6.0.list && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends mongodb-database-tools && \
+    apt-get install -y openjdk-8-jdk python3 python3-pip wget gnupg && \
     rm -rf /var/lib/apt/lists/*
 
-# 2) Descargar e instalar Apache Pig 0.17.0 (ajusta la versión si lo deseas)
-RUN wget https://archive.apache.org/dist/pig/pig-0.17.0/pig-0.17.0.tar.gz -O /tmp/pig.tar.gz && \
-    mkdir -p $PIG_HOME && \
-    tar -xzf /tmp/pig.tar.gz -C $PIG_HOME --strip-components=1 && \
-    rm /tmp/pig.tar.gz
+# 2. Instalar Apache Pig (versión 0.17.0, por ejemplo)
+WORKDIR /opt
+RUN wget https://archive.apache.org/dist/pig/pig-0.17.0/pig-0.17.0.tar.gz && \
+    tar -xzvf pig-0.17.0.tar.gz && \
+    mv pig-0.17.0 pig && \
+    rm pig-0.17.0.tar.gz
 
-# 3) Crear directorios necesarios
-RUN mkdir -p /scripts /data/raw /data/processed
+# 3. Configurar variables de entorno para Pig
+ENV PIG_HOME=/opt/pig
+ENV PATH=$PIG_HOME/bin:$PATH
 
-# 4) Copiar el script Pig al contenedor
-COPY filter_homogenize.pig /scripts/filter_homogenize.pig
+# 4. Instalar pymongo (Python)
+RUN pip3 install pymongo
 
-# 5) (Opcional) Si en tu distribución de Pig no viene piggybank.jar,
-#    cópialo manualmente aquí. De lo contrario, puedes comentar esta línea:
-# COPY piggybank.jar $PIG_HOME/piggybank.jar
+# 5. Crear directorios fijos para volúmenes
+RUN mkdir -p /data/raw /data/processed /scripts
+
+# 6. Copiar scripts de Python y Pig Latin
+COPY scripts/export_data.py /scripts/export_data.py
+COPY scripts/filter_homogenize.pig /scripts/filter_homogenize.pig
+
+# 7. Marcar /scripts/ como ejecutable (no es obligatorio)
+RUN chmod +x /scripts/export_data.py
+
+# 8. Copiar requirements.txt si tuvieras más dependencias (opcional)
+# COPY requirements.txt /scripts/requirements.txt
+# RUN pip3 install -r /scripts/requirements.txt
 
 WORKDIR /scripts
 
-# El ENTRYPOINT será bash; el comando real lo proveeremos en docker-compose.yml
-ENTRYPOINT ["/bin/bash"]
+# 9. Configurar un entrypoint que repita periodicidad
+ENTRYPOINT [ "bash", "-c" ]
+CMD [ "\
+  while true; do \
+    echo \"[pig] Iniciando exportación a CSV desde MongoDB...\"; \
+    python3 /scripts/export_data.py || { echo \"[pig] Error en export_data.py\"; sleep 10; continue; }; \
+    echo \"[pig] CSV generado, ejecutando Pig Latin...\"; \
+    pig -x local /scripts/filter_homogenize.pig || { echo \"[pig] Error en Pig Latin\"; sleep 10; continue; }; \
+    echo \"[pig] Pig terminó, datos en /data/processed\"; \
+    echo \"[pig] Durmiendo 30s antes de próxima iteración...\"; \
+    sleep 30; \
+  done\
+" ]
