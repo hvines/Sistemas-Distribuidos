@@ -1,4 +1,4 @@
-# Tarea 1
+# Tarea 2
 
 # Descripción general
 
@@ -8,6 +8,10 @@ Este proyecto despliega, mediante Docker Compose, un flujo de procesamiento de e
 3.	Caché (Redis): almacena el último lote de eventos durante 10 segundos para consultas rápidas.
 4.	Generador de tráfico: simula llegadas de eventos con dos distribuciones (determinista y Poisson).
 5.	Visores para administración: mongo-express en el puerto 8081 y redis-commander en el 8082.
+
+
+
+
 
 Cabe mencionar que el presente fue diseñado en un sistema con macOS 14.4.3.
 
