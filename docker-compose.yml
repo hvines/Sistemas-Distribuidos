@@ -23,9 +23,7 @@ services:
   mongo-express:
     image: mongo-express:latest
     restart: always
-    #depends_on:
-      #mongodb:
-        #condition: service_healthy
+
     depends_on:
       - mongodb
     environment:
@@ -44,8 +42,8 @@ services:
     platform: linux/amd64
     restart: always
     depends_on:
-      redis:
-        condition: service_healthy
+      -  redis
+        #condition: service_healthy
     environment:
       REDIS_HOSTS: local:redis:6379
     ports:
@@ -103,33 +101,26 @@ services:
       dockerfile: Dockerfile
     image: my_pig:latest
     container_name: pig_ds
-    #depends_on:
-      #mongodb:
-        #condition: service_healthy
     depends_on:
-      - mongodb      
+      - mongodb     
+    environment:
+      MONGO_URI: "mongodb://root:example@mongodb:27017/?authSource=admin"
+      MONGO_DBNAME: "waze_alertas"
+      MONGO_COLLNAME: "eventos"
+      PROXIMITY_THRESHOLD_METERS: 500
+      TIME_WINDOW_MINUTES: 15
+      OUTPUT_FORMAT: "csv"
+      ENABLE_TEMPORAL_ANALYSIS: "true"
+      ENABLE_GEOGRAPHIC_GROUPING: "true"      
     volumes:
-      - mongo_export:/data/raw      # aquí volcaré el JSON exportado
-      - pig_output:/data/processed  # aquí se guardará el JSON procesado
-      - pig_data_raw:/data/raw
-      - pig_data_processed:/data/processed
-    entrypoint: [ "bash", "-c" ]
-    command: |
-      echo "=== Iniciando Pig Loop ==="; \
-      # Esperar a Mongo y exportar datos a /data/raw/events.json
-      until mongoexport --uri="mongodb://root:example@mongodb:27017/tu_base.tu_coleccion" \
-        --out /data/raw/events.json --type=json --pretty=false; do \
-        echo "Esperando a MongoDB para exportar..."; sleep 2; \
-      done; \
-      echo "Export completo -> /data/raw/events.json"; \
-      # Ejecutar script Pig
-      pig -x local /scripts/filter_homogenize.pig; \
-      echo "Pig terminó: resultados en /data/processed"; \
-      # Dormir 30 segundos antes de próxima iteración
-      echo "Durmiendo 30s antes de nueva iteración..."; \
-      sleep 30; \
-      exec /bin/bash -c "$0"
-
+      - mongo_export:/data/raw      
+      - pig_output:/data/processed
+      - ./pig/scripts:/scripts
+    networks:
+      - my-network
+    stdin_open: true
+    tty: true
+    command: tail -f /dev/null  # Mantiene el contenedor corriendo
       
 
 volumes:
@@ -139,6 +130,8 @@ volumes:
   pig_data_raw:
   pig_data_processed:
   pig_output:
+  pig_logs:
+  pig_scripts:  # Nuevo volumen para scripts y exports CSV
 
 networks:
   my-network:
