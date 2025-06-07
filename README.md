@@ -8,12 +8,10 @@ Este proyecto despliega, mediante Docker Compose, un flujo de procesamiento de e
 3.	Caché (Redis): almacena el último lote de eventos durante 10 segundos para consultas rápidas.
 4.	Generador de tráfico: simula llegadas de eventos con dos distribuciones (determinista y Poisson).
 5.	Visores para administración: mongo-express en el puerto 8081 y redis-commander en el 8082.
+6.	Apache PIG: filtrado y procesamiento de datos
 
 
-
-
-
-Cabe mencionar que el presente fue diseñado en un sistema con macOS 14.4.3.
+Cabe mencionar que el presente fue diseñado con vibe coding en un sistema con macOS 14.4.3.
 
 
 # Instrucciones de arranque
@@ -54,12 +52,12 @@ Cabe mencionar que el presente fue diseñado en un sistema con macOS 14.4.3.
 
    	- Filtro por intervalo de tiempo (AÑO-DIA-MES y hora, respectivamente) de eventos en cierta comuna
     ```powershell
-
+		
 	docker exec -it pig_ds python3 /scripts/filter_by_time.py '2025-06-07 00:00:00' '2025-06-07 23:59:59'
 	
  	```
 
-   	- Filtro por tipo de evento
+   	- Filtro por tipo de evento			
     ```powershell
 
 	docker exec -it pig_ds python3 /scripts/filter_by_type.py --list #reviso todos los eventos disponibles
@@ -67,9 +65,5 @@ Cabe mencionar que el presente fue diseñado en un sistema con macOS 14.4.3.
     	docker exec -it pig_ds python3 /scripts/filter_by_type.py JAM #ejemplo, selecciono el necesario
 	
  	```
-
-
-# Explicación de parámetros de distribución
- 
-Cabe recalcar
+e
 
