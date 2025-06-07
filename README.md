@@ -41,14 +41,35 @@ Cabe mencionar que el presente fue diseñado en un sistema con macOS 14.4.3.
    
 	Mongo Express → http://localhost:8081 y Redis Commander → http://localhost:8082
 
+
+5.	Tipos de consultas para Apache Pig
+
+   	- Filtro de incidentes por comuna
+    ```powershell
+
+	docker exec -it pig_ds python3 /scripts/filter_by_comuna.py --list #para mostrar todas las comunas disponibles
+    	docker exec -it pig_ds python3 /scripts/filter_by_comuna.py [nombre comuna]
+	
+ 	```
+
+   	- Filtro por intervalo de tiempo (año-mes-dia y hora, respectivamente) de eventos EN cierta comuna
+    ```powershell
+
+	docker exec -it pig_ds python3 /scripts/filter_by_time.py '2024-01-01 00:00:00' '2024-01-01 23:59:59'
+	
+ 	```
+
+   	- Filtro por tipo de evento
+    ```powershell
+
+	docker exec -it pig_ds python3 /scripts/filter_by_type.py --list #reviso todos los eventos disponibles
+
+    	docker exec -it pig_ds python3 /scripts/filter_by_type.py JAM #ejemplo de uso
+	
+ 	```
+
+
 # Explicación de parámetros de distribución
  
- ```powershell
-    
-EVENTS_PER_SEC	traffic-generator	Tasa media de generación de eventos por segundo (evt/s).
-DISTRIBUTION	traffic-generator	Distribución de llegadas: deterministic o poisson.	
 
- ```
-Existe un parametro para una distribución tanto determinista como poisson.
-Por defecto está en poisson, pero cambiarlo a determinista, es sólo cambiar la linea 30 del generator.py a "deterministic".
 
