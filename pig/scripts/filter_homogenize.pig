@@ -2,13 +2,14 @@
 
 -- 1. Cargar el CSV (suponemos que usa coma como separador y hay header)
 events_raw = LOAD '/data/raw/events.csv'
-    USING PigStorage(',', 'skipHeader=true')
-    AS (campo1:chararray, campo2:chararray, campo3:chararray);
+    USING PigStorage(',')
+    AS (uuid:chararray, type:chararray, location:chararray, timestamp:chararray);
 
--- 2. Filtrar por algún parámetro. Por ejemplo, campo1 == 'valorX'
-events_filtered = FILTER events_raw BY campo1 == 'valorX';
+-- 2. Saltar la fila del encabezado
+events_no_header = FILTER events_raw BY uuid != 'uuid';
 
--- 3. (Opcional) Si quieres aplicar alguna homologación o transformación, agrégala aquí.
+-- 3. Filtrar por tipo de evento (ejemplo: solo accidentes y atascos)
+events_filtered = FILTER events_no_header BY type == 'accident' OR type == 'jam';
 
 -- 4. Guardar el resultado en CSV en /data/processed/events_filtered.csv
 STORE events_filtered
