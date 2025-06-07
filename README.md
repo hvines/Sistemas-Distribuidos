@@ -50,7 +50,7 @@ Cabe mencionar que el presente fue diseñado con vibe coding en un sistema con m
 	
  	```
 
-   	- Filtro por intervalo de tiempo (AÑO-DIA-MES y hora, respectivamente) de eventos en cierta comuna
+   	- Filtro por intervalo de tiempo (AÑO-DIA-MES y hora, respectivamente) de eventos
     ```powershell
 		
 	docker exec -it pig_ds python3 /scripts/filter_by_time.py '2025-06-07 00:00:00' '2025-06-07 23:59:59'
@@ -65,5 +65,17 @@ Cabe mencionar que el presente fue diseñado con vibe coding en un sistema con m
     	docker exec -it pig_ds python3 /scripts/filter_by_type.py JAM #ejemplo, selecciono el necesario
 	
  	```
-e
 
+   	- Filtro por analisis de frecuencia	
+    ```powershell
+
+	docker exec -it pig_ds python3 /scripts/frequency_analysis.py #analisis general
+   	docker exec -it pig_ds python3 /scripts/frequency_analysis.py JAM #por tipo de evento
+
+	
+ 	```
+
+
+
+
+    
