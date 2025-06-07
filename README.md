@@ -52,10 +52,10 @@ Cabe mencionar que el presente fue diseñado en un sistema con macOS 14.4.3.
 	
  	```
 
-   	- Filtro por intervalo de tiempo (año-mes-dia y hora, respectivamente) de eventos EN cierta comuna
+   	- Filtro por intervalo de tiempo (AÑO-DIA-MES y hora, respectivamente) de eventos en cierta comuna
     ```powershell
 
-	docker exec -it pig_ds python3 /scripts/filter_by_time.py '2024-01-01 00:00:00' '2024-01-01 23:59:59'
+	docker exec -it pig_ds python3 /scripts/filter_by_time.py '2025-06-07 00:00:00' '2025-06-07 23:59:59'
 	
  	```
 
@@ -63,13 +63,13 @@ Cabe mencionar que el presente fue diseñado en un sistema con macOS 14.4.3.
     ```powershell
 
 	docker exec -it pig_ds python3 /scripts/filter_by_type.py --list #reviso todos los eventos disponibles
-
-    	docker exec -it pig_ds python3 /scripts/filter_by_type.py JAM #ejemplo de uso
+    	docker exec -it pig_ds python3 /scripts/filter_by_type.py --all #todos los eventos ordenados por tipo
+    	docker exec -it pig_ds python3 /scripts/filter_by_type.py JAM #ejemplo, selecciono el necesario
 	
  	```
 
 
 # Explicación de parámetros de distribución
  
-
+Cabe recalcar
 
